@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
 </head>
+
 <body>
   <header class="top">
     <div class="wrap">
@@ -16,23 +18,37 @@
       <div id="stats"></div>
     </div>
   </header>
+
   <div class="wrap">
     <div class="bar">
       <input id="q" type="search" placeholder="Buscar persona…" aria-label="Buscar persona">
+
       <select id="f" aria-label="Filtrar">
         <option value="all">Todos</option>
         <option value="pending">Pendientes (rojo)</option>
         <option value="paid">Pagados (verde)</option>
         <option value="none">Sin pedido</option>
       </select>
+
+      <select id="sort" aria-label="Ordenar">
+        <option value="name">Nombre</option>
+        <option value="lastName">Apellido</option>
+        <option value="due">Total a pagar</option>
+        <option value="remaining">Falta pagar</option>
+      </select>
+
       <button id="add" class="primary">+ Persona</button>
     </div>
+
     <div class="layout">
       <main id="people"></main>
       <aside id="summary"></aside>
     </div>
   </div>
+
   <dialog id="editor"></dialog>
+
   <script type="module" src="/js/client/main.js"></script>
 </body>
+
 </html>

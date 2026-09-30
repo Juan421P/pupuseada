@@ -3,7 +3,7 @@ import { Person } from "../domain/Person.js";
 import { fold } from "../domain/util.js";
 import type { Api } from "./Api.js";
 import { PersonEditor } from "./PersonEditor.js";
-import { PersonList } from "./PersonList.js";
+import { PersonFilter, PersonList, PersonSort } from "./PersonList.js";
 import { SummaryPanel } from "./SummaryPanel.js";
 
 export class App {
@@ -11,7 +11,8 @@ export class App {
   private summary: SummaryPanel;
   private editor: PersonEditor;
   private query = "";
-  private filter = "all";
+  private filter: PersonFilter = "all";
+  private sort: PersonSort = "name";
 
   constructor(private ledger: Ledger, private api: Api) {
     const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -41,7 +42,12 @@ export class App {
     });
 
     $("f").addEventListener("change", (e) => {
-      this.filter = (e.target as HTMLSelectElement).value;
+      this.filter = (e.target as HTMLSelectElement).value as PersonFilter;
+      this.render();
+    });
+
+    $("sort").addEventListener("change", (e) => {
+      this.sort = (e.target as HTMLSelectElement).value as PersonSort;
       this.render();
     });
 
@@ -113,7 +119,7 @@ export class App {
       `<span class="pill pending">Pendientes ${l.countByStatus("pending")}</span>` +
       `<span class="pill">Sin pedido ${l.countByStatus("none")}</span>`;
 
-    this.list.render(this.query, this.filter);
+    this.list.render(this.query, this.filter, this.sort);
     this.summary.render();
   }
 }
