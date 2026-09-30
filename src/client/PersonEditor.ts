@@ -129,7 +129,8 @@ export class PersonEditor {
   private upload(file: File): void {
     this.pendingPhoto = file;
     const url = URL.createObjectURL(file);
-    this.dlg.querySelector("#prev")!.innerHTML = `<img src="${url}" alt="">`;
+    this.dlg.querySelector("#prev")!.innerHTML =
+      `<img src="${url}" alt="" class="photo-preview">`;
   }
 
   private refreshStatus(): void {

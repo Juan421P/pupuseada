@@ -19,12 +19,18 @@ export class Menu {
       m("CQ", 1.4), m("C", 1.4), m("AQ", 1.4),
       a("CQ", 1.4), a("F", 1.0), a("QJ", 1.4),
       m("CQ", 1.4), m("F", 1.0), m("QJ", 1.4),
+      a("QL", 1.4),
+      m("QL", 1.4),
       new Coffee(),
       new Chocolate(),
       new Soda("cocacola", "Coca Cola"),
       new Soda("cremasoda", "Cremasoda"),
+      new Soda("uva", "Uva"),
+      new Soda("sprite", "Sprite"),
       new Tea("teliptondurazno", "TL Durazno"),
+      new Tea("teliptonlimon", "TL Limón"),
       new DelValle("delvallemandarina", "DV Mandarina"),
+      new DelValle("delvallenaranja", "DV Naranja"),
     ]);
   }
 }
