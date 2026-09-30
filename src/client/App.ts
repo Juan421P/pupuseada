@@ -15,29 +15,104 @@ export class App {
 
   constructor(private ledger: Ledger, private api: Api) {
     const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+
     this.list = new PersonList($("people"), ledger, (p) => this.editor.open(p));
+
     this.summary = new SummaryPanel($("summary"), ledger);
+
     this.editor = new PersonEditor(
-      $<HTMLDialogElement>("editor"), ledger, api,
-      (p, isNew) => { if (isNew) ledger.add(p); this.changed(); },
-      (p) => { ledger.remove(p.id); this.changed(); },
-      () => this.changed(),
+      $("editor"),
+      ledger,
+      api,
+      async (original, draft, isNew, password, photo) => {
+        return this.changed(original, draft, isNew, password, photo);
+      },
+      (p, password) => {
+        const deleted = Person.fromJSON(p.toJSON());
+        ledger.remove(p.id);
+        void this.changedDelete(password, deleted);
+      },
+      () => this.render(),
     );
 
-    $("q").addEventListener("input", (e) => { this.query = fold((e.target as HTMLInputElement).value); this.render(); });
-    $("f").addEventListener("change", (e) => { this.filter = (e.target as HTMLSelectElement).value; this.render(); });
+    $("q").addEventListener("input", (e) => {
+      this.query = fold((e.target as HTMLInputElement).value);
+      this.render();
+    });
+
+    $("f").addEventListener("change", (e) => {
+      this.filter = (e.target as HTMLSelectElement).value;
+      this.render();
+    });
+
     $("add").addEventListener("click", () => this.editor.open(new Person(), true));
+
     this.render();
   }
 
-  private changed(): void { this.api.scheduleSave(this.ledger); this.render(); }
+  private async changed(
+    original: Person,
+    draft: Person,
+    isNew: boolean,
+    password: string,
+    photo: File | null,
+  ): Promise<boolean> {
+    try {
+      if (photo) {
+        draft.photo = await this.api.uploadPhoto(
+          `${draft.id}-${Date.now().toString(36)}`,
+          photo,
+          password,
+        );
+      }
+
+      if (isNew) {
+        this.ledger.add(draft);
+      } else {
+        original.apply(draft.toJSON());
+      }
+
+      const response = await this.api.save(this.ledger, password);
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      this.render();
+      return true;
+    } catch {
+      alert("No se pudo guardar. Verifica la contraseña.");
+      return false;
+    }
+  }
+
+  private async changedDelete(
+    password: string,
+    deleted: Person,
+  ): Promise<void> {
+    try {
+      const response = await this.api.save(this.ledger, password);
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      this.render();
+    } catch {
+      this.ledger.add(deleted);
+      this.render();
+      alert("No se pudo eliminar. Verifica la contraseña.");
+    }
+  }
 
   private render(): void {
     const l = this.ledger;
+
     document.getElementById("stats")!.innerHTML =
       `<span class="pill paid">Pagados ${l.countByStatus("paid")}</span>` +
       `<span class="pill pending">Pendientes ${l.countByStatus("pending")}</span>` +
       `<span class="pill">Sin pedido ${l.countByStatus("none")}</span>`;
+
     this.list.render(this.query, this.filter);
     this.summary.render();
   }

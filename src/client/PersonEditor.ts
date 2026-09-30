@@ -13,11 +13,18 @@ export class PersonEditor {
   private draft: Person | null = null;
   private isNew = false;
   private downOutside = false;
+  private pendingPhoto: File | null = null;
 
   constructor(
     private dlg: HTMLDialogElement, private ledger: Ledger, private api: Api,
-    private onSave: (p: Person, isNew: boolean) => void,
-    private onDelete: (p: Person) => void,
+    private onSave: (
+      original: Person,
+      draft: Person,
+      isNew: boolean,
+      password: string,
+      photo: File | null,
+    ) => Promise<boolean>,
+    private onDelete: (p: Person, password: string) => void,
     private onMenuChange: () => void,
   ) {
     dlg.addEventListener("input", (e) => this.onInput(e.target as HTMLInputElement));
@@ -37,6 +44,7 @@ export class PersonEditor {
   open(p: Person, isNew = false): void {
     this.original = p;
     this.isNew = isNew;
+    this.pendingPhoto = null;
     this.draft = Person.fromJSON(p.toJSON());
     this.draw(this.draft);
     this.dlg.showModal();
@@ -94,29 +102,34 @@ export class PersonEditor {
     this.refreshStatus();
   }
 
-  private onClick(el: HTMLElement): void {
+  private async onClick(el: HTMLElement): Promise<void> {
     const act = el.closest<HTMLElement>("[data-act]")?.dataset.act;
     const orig = this.original, draft = this.draft;
     if (!orig || !draft) return;
     if (act === "cancel") this.dlg.close();
-    else if (act === "save") { orig.apply(draft.toJSON()); this.onSave(orig, this.isNew); this.dlg.close(); }
-    else if (act === "del") { this.onDelete(orig); this.dlg.close(); }
-    else if (act === "soda") {
-      const flavor = (this.dlg.querySelector<HTMLInputElement>("#newSoda")?.value ?? "").trim();
-      if (!flavor) return;
-      this.draw(draft);
-      this.onMenuChange();
+    else if (act === "save") {
+      const password = window.prompt("Contraseña:");
+      if (password === null) return;
+      const success = await this.onSave(
+        orig,
+        draft,
+        this.isNew,
+        password,
+        this.pendingPhoto,
+      );
+      if (success) this.dlg.close();
+    } else if (act === "del") {
+      const password = window.prompt("Contraseña:");
+      if (password === null) return;
+      this.onDelete(orig, password);
+      this.dlg.close();
     }
   }
 
-  private async upload(file: File): Promise<void> {
-    const p = this.draft;
-    if (!p) return;
-    try {
-      // unique name so a scratched edit never overwrites the saved photo
-      p.photo = await this.api.uploadPhoto(`${p.id}-${Date.now().toString(36)}`, file);
-      this.dlg.querySelector("#prev")!.innerHTML = Avatar.html(p, "big");
-    } catch { alert("No se pudo subir la foto (JPG, PNG, WebP o GIF, máx. 10 MB)."); }
+  private upload(file: File): void {
+    this.pendingPhoto = file;
+    const url = URL.createObjectURL(file);
+    this.dlg.querySelector("#prev")!.innerHTML = `<img src="${url}" alt="">`;
   }
 
   private refreshStatus(): void {
