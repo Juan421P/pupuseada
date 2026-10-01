@@ -29,6 +29,7 @@ export class Menu {
       new Soda("sprite", "Sprite"),
       new Tea("teliptondurazno", "TL Durazno"),
       new Tea("teliptonlimon", "TL Limón"),
+      new Tea("teliptonframbuesa", "TL Frambuesa"),
       new DelValle("delvallemandarina", "DV Mandarina"),
       new DelValle("delvallenaranja", "DV Naranja"),
     ]);
