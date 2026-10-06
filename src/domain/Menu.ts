@@ -21,6 +21,8 @@ export class Menu {
       m("CQ", 1.4), m("F", 1.0), m("QJ", 1.4),
       a("QL", 1.4),
       m("QL", 1.4),
+      a("Loca", 5),
+      m("Loca", 5),
       new Coffee(),
       new Chocolate(),
       new Soda("cocacola", "Coca Cola"),
